@@ -189,6 +189,9 @@ class Board:
             (May run forever!)'''
         sleep(delay)
         while True:
+
+            # md5sum used to determine if there is any change from the
+            # previous frame. If no change, exit
             old_hash = hashlib.md5(self.__repr__().encode("utf-8"))
 
             # scan board, and determine who lives and who dies
