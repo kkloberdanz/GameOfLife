@@ -14,6 +14,8 @@ import sys
 
 from time import sleep
 
+debug = False
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -96,6 +98,7 @@ class Board:
             ret_s += '--'
         ret_s += '\n' 
 
+        # Draw board
         for i in range(self.height):
             for j in range(self.width):
                 ret_s += '|'
@@ -105,7 +108,18 @@ class Board:
                 ret_s += '--'
             ret_s += '\n' 
 
+        # last char is always '\n'. We may not want this
         return ret_s[:-1]
+
+
+    def make_random_board(self, p=0.50):
+        ''' Given an optional percent coverage of cells, randomly
+            place cells onto board '''
+        for i in range(self.width):
+            for j in range(self.height):
+                r = random.random()
+                if r < p:
+                    b.set_cell(Cell(i, j, alive=True))
 
     def draw(self):
         ''' Prints Board to stdout '''
@@ -115,50 +129,17 @@ class Board:
         ''' Place a cell at Cell point 'cell' in the board '''
         self.board[cell.y][cell.x] = cell
 
-    def get_iter_y(self, n):
-        return Iter(max(n - 1, 0), 1 + min(n + 1, self.height))
-
-    def get_iter_x(self, n):
-        return Iter(max(n - 1, 0), 1 + min(n + 1, self.width))
-
     def get_living_neighbors(self, cell):
         ''' returns list of type Cell that 
         holds the neighbors of the given cell '''
         ret_l = []
 
-        # contains the ranges to iterate over
-        y_range = self.get_iter_y(cell.y)
-        x_range = self.get_iter_x(cell.x)
-
-        count = 0
         for y in range(cell.y - 1, cell.y + 2):
             for x in range(cell.x - 1, cell.x + 2):
-                count += 1
                 if x < self.width and x >= 0 and y < self.height and y >= 0: 
                     c = self.board[y][x]
                     if c.alive and c != cell:
                         ret_l.append(c)
-
-
-        '''
-        # C++ style iteration over neighbors
-        tmp_l = []
-        for y in range(y_range.begin, y_range.end):
-            for x in range(x_range.begin, x_range.end):
-                # tmp_l.append(self.board[y][x])
-                tmp_l.append((x,y))
-                if x < self.width and x >= 0 and y < self.height and y >= 0:
-                    c = self.board[y][x]
-                    if c.alive and c != cell:
-                        ret_l.append(c)
-
-        print("CELL:", cell.x, cell.y)
-        print("Neighbors:")
-        # for c in tmp_l:
-            # print("    ", c.x, c.y) 
-        for x,y in tmp_l:
-            print("    ", x, y) 
-        '''
         return ret_l
 
     def check_rules(self, cell):
@@ -173,28 +154,50 @@ class Board:
         if (num_neighbors < 2):
             # self.board[cell.y][cell.x].alive = False
             self.board[cell.y][cell.x].will_die = True
+            if debug:
+                print("CELL:", cell.x, cell.y, "Will DIE")
+                print("Neighbors:")
+                for c in neighbors_l:
+                    print("    ", c.x, c.y) 
+
 
         # 3. Any live cell with more than three live neighbours dies, 
         #    as if by overpopulation.
         elif (num_neighbors > 3):
             # self.board[cell.y][cell.x].alive = False
             self.board[cell.y][cell.x].will_die = True
+            if debug:
+                print("CELL:", cell.x, cell.y, "Will DIE")
+                print("Neighbors:")
+                for c in neighbors_l:
+                    print("    ", c.x, c.y) 
 
         # 4. Any dead cell with exactly three live neighbours 
         #    becomes a live cell, as if by reproduction.
         elif (num_neighbors) == 3:
             # self.board[cell.y][cell.x].alive = True
             self.board[cell.y][cell.x].will_revive = True
+            if debug:
+                print("CELL:", cell.x, cell.y, "Will REVIVE")
+                print("Neighbors:")
+                for c in neighbors_l:
+                    print("    ", c.x, c.y) 
 
     def run(self, delay=2):
+        ''' After creating board, begin simulation.
+            Runs until there is no movement from 1 frame to the next.
+            (May run forever!)'''
         sleep(delay)
         while True:
             old_hash = hashlib.md5(self.__repr__().encode("utf-8"))
+
+            # scan board, and determine who lives and who dies
             for y in range(self.height):
                 for x in range(self.width): 
                     cell = self.board[y][x]
                     self.check_rules(cell)
 
+            # apply rules to the board
             for y in range(self.height):
                 for x in range(self.width): 
                     cell = self.board[y][x]
@@ -271,11 +274,7 @@ print("Dimensions:", x, y)
 print("Percent Coverage:", str(p * 100) + "%")
 input("Press RETURN to start simulation")
 
-for i in range(x):
-    for j in range(y):
-        r = random.random()
-        if r < p:
-            b.set_cell(Cell(i, j, alive=True))
+b.make_random_board(p)
 
 print("Start:")
 b.draw()
