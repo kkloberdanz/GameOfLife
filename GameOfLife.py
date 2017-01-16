@@ -1,3 +1,11 @@
+'''
+Programmer: Kyle Kloberdanz
+Description: Conway's Game of Life
+
+Notes:
+    Only tested on Linux (Ubuntu GNOME 16.10)
+    Probably will not work on Windows
+'''
 import math
 import random
 import hashlib
@@ -5,6 +13,16 @@ import os
 import sys
 
 from time import sleep
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class Point:
     def __init__(self, x=0, y=0):
@@ -25,7 +43,7 @@ class Cell(Point):
 
     def __repr__(self):
         if self.alive:
-            return "*"
+            return bcolors.OKGREEN + "*" + bcolors.ENDC
         else:
             return " "
 class Iter:
