@@ -1,7 +1,10 @@
 import math
-from time import sleep
 import random
 import hashlib
+import os
+import sys
+
+from time import sleep
 
 class Point:
     def __init__(self, x=0, y=0):
@@ -28,7 +31,8 @@ class Cell(Point):
 class Iter:
     def __init__(self, begin=0, end=0):
         if begin > end:
-            raise ValueError("Iter: begin cannot be greater than end")
+            raise ValueError("Iter: begin cannot be greater than end\n" + 
+                    "begin = " + str(begin) + "end = " + str(end))
 
         else:
             self.begin = begin
@@ -75,14 +79,17 @@ class Board:
 
     def draw(self):
         ''' Prints Board to stdout '''
-        print(self.__repr__())
+        print(self.__repr__() + "\n\n")
     
     def set_cell(self, cell):
         ''' Place a cell at Cell point 'cell' in the board '''
         self.board[cell.y][cell.x] = cell
 
-    def get_iter(self, n):
+    def get_iter_y(self, n):
         return Iter(max(n - 1, 0), 1 + min(n + 1, self.height))
+
+    def get_iter_x(self, n):
+        return Iter(max(n - 1, 0), 1 + min(n + 1, self.width))
 
     def get_living_neighbors(self, cell):
         ''' returns list of type Cell that 
@@ -90,8 +97,8 @@ class Board:
         ret_l = []
 
         # contains the ranges to iterate over
-        y_range = self.get_iter(cell.y)
-        x_range = self.get_iter(cell.x)
+        y_range = self.get_iter_y(cell.y)
+        x_range = self.get_iter_x(cell.x)
 
         # C++ style iteration over neighbors
         for y in range(y_range.begin, y_range.end):
@@ -125,6 +132,7 @@ class Board:
             self.board[cell.y][cell.x].alive = True
 
     def run(self, delay=2):
+        sleep(delay)
         while True:
             old_hash = hashlib.md5(self.__repr__().encode("utf-8"))
             for y in range(self.height):
@@ -177,23 +185,34 @@ def test():
     B.run()
 
 # Main
-x = 30
-y = 30
-p = .30 # percent coverage of cells
+# x = 80
+# y = 50
+
+# set x and y to the size of the console (UNIX only)
+
+x, y = os.popen("stty size", 'r').read().split()
+x = int(x)
+y = int(y) // 8
+
+if len(sys.argv) > 1:
+    p = float(sys.argv[1]) / 100
+else:
+    p = 0.75 # percent coverage of cells
 
 b = Board(x, y)
 
+print("Dimensions:", x, y)
+print("Percent Coverage:", str(p * 100) + "%")
+input("Press RETURN to start simulation")
 
 for i in range(x):
     for j in range(y):
         r = random.random()
         if r < p:
-            print(r)
             b.set_cell(Cell(i, j, alive=True))
 
 print("Start:")
 b.draw()
-print("-----------------------------")
 
 b.run()
 
