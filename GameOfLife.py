@@ -39,7 +39,19 @@ class Point:
 class Cell(Point):
     def __init__(self, x=0, y=0, alive=False):
         self.alive = alive
+        self.will_die = False
+        self.will_revive = False
         Point.__init__(self, x, y)
+
+    def revive(self):
+        self.alive = True
+        self.will_die = False
+        self.will_revive = False
+
+    def kill(self):
+        self.alive = False
+        self.will_die = False
+        self.will_revive = False
 
     def __repr__(self):
         if self.alive:
@@ -118,36 +130,61 @@ class Board:
         y_range = self.get_iter_y(cell.y)
         x_range = self.get_iter_x(cell.x)
 
+        count = 0
+        for y in range(cell.y - 1, cell.y + 2):
+            for x in range(cell.x - 1, cell.x + 2):
+                count += 1
+                if x < self.width and x >= 0 and y < self.height and y >= 0: 
+                    c = self.board[y][x]
+                    if c.alive and c != cell:
+                        ret_l.append(c)
+
+
+        '''
         # C++ style iteration over neighbors
+        tmp_l = []
         for y in range(y_range.begin, y_range.end):
             for x in range(x_range.begin, x_range.end):
+                # tmp_l.append(self.board[y][x])
+                tmp_l.append((x,y))
                 if x < self.width and x >= 0 and y < self.height and y >= 0:
                     c = self.board[y][x]
                     if c.alive and c != cell:
                         ret_l.append(c)
 
+        print("CELL:", cell.x, cell.y)
+        print("Neighbors:")
+        # for c in tmp_l:
+            # print("    ", c.x, c.y) 
+        for x,y in tmp_l:
+            print("    ", x, y) 
+        '''
         return ret_l
 
     def check_rules(self, cell):
         ''' Applies rules for Conway's Game of Life to the given cell '''
         neighbors_l = self.get_living_neighbors(cell)
+        num_neighbors = len(neighbors_l)
 
         # 1. Any live cell with fewer than two live neighbours dies, 
         #    as if caused by underpopulation.
         # 2. Any live cell with two or three live neighbours lives 
         #    on to the next generation.
-        if (len(neighbors_l) < 2):
-            self.board[cell.y][cell.x].alive = False
+        if (num_neighbors < 2):
+            # self.board[cell.y][cell.x].alive = False
+            self.board[cell.y][cell.x].will_die = True
 
         # 3. Any live cell with more than three live neighbours dies, 
         #    as if by overpopulation.
-        if (len(neighbors_l) > 3):
-            self.board[cell.y][cell.x].alive = False
+        elif (num_neighbors > 3):
+            # self.board[cell.y][cell.x].alive = False
+            self.board[cell.y][cell.x].will_die = True
 
         # 4. Any dead cell with exactly three live neighbours 
         #    becomes a live cell, as if by reproduction.
-        if len(neighbors_l) == 3:
-            self.board[cell.y][cell.x].alive = True
+        elif (num_neighbors) == 3:
+            # self.board[cell.y][cell.x].alive = True
+            self.board[cell.y][cell.x].will_revive = True
 
     def run(self, delay=2):
         sleep(delay)
@@ -157,6 +194,17 @@ class Board:
                 for x in range(self.width): 
                     cell = self.board[y][x]
                     self.check_rules(cell)
+
+            for y in range(self.height):
+                for x in range(self.width): 
+                    cell = self.board[y][x]
+
+                    if cell.will_revive:
+                        self.board[y][x].revive()
+
+                    elif cell.will_die:
+                        self.board[y][x].kill()
+
             self.draw()
 
             new_hash = hashlib.md5(self.__repr__().encode("utf-8"))
