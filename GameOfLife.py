@@ -153,7 +153,7 @@ class Board:
         #    on to the next generation.
         if (num_neighbors < 2):
             # self.board[cell.y][cell.x].alive = False
-            self.board[cell.y][cell.x].will_die = True
+            self.board[cell.y][cell.x].alive = False
             if debug:
                 print("CELL:", cell.x, cell.y, "Will DIE")
                 print("Neighbors:")
@@ -165,7 +165,8 @@ class Board:
         #    as if by overpopulation.
         elif (num_neighbors > 3):
             # self.board[cell.y][cell.x].alive = False
-            self.board[cell.y][cell.x].will_die = True
+            #self.board[cell.y][cell.x].will_die = True
+            self.board[cell.y][cell.x].alive = False
             if debug:
                 print("CELL:", cell.x, cell.y, "Will DIE")
                 print("Neighbors:")
@@ -176,7 +177,8 @@ class Board:
         #    becomes a live cell, as if by reproduction.
         elif (num_neighbors) == 3:
             # self.board[cell.y][cell.x].alive = True
-            self.board[cell.y][cell.x].will_revive = True
+            #self.board[cell.y][cell.x].will_revive = True
+            self.board[cell.y][cell.x].alive = True
             if debug:
                 print("CELL:", cell.x, cell.y, "Will REVIVE")
                 print("Neighbors:")
